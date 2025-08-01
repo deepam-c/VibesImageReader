@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vibes-backend
+  labels:
+    app: vibes-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vibes-backend
+  template:
+    metadata:
+      labels:
+        app: vibes-backend
+    spec:
+      containers:
+      - name: vibes-backend
+        image: <YOUR_CONTAINER_REGISTRY>/vibes-backend:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_ENV
+          value: "production"
+        - name: PYTHONPATH
+          value: "/app"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vibes-backend-service
+spec:
+  selector:
+    app: vibes-backend
+  ports:
+  - port: 80
+    targetPort: 5000
+  type: LoadBalancer 
