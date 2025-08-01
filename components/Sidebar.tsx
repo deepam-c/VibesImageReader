@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { 
   HomeIcon, 
   CameraIcon,
+  DocumentTextIcon,
   Bars3Icon,
   XMarkIcon
 } from '@heroicons/react/24/outline'
@@ -13,6 +14,7 @@ import { useState } from 'react'
 const navigation = [
   { name: 'Home', href: '/', icon: HomeIcon },
   { name: 'Capture Image', href: '/capture', icon: CameraIcon },
+  { name: 'View Data', href: '/view-data', icon: DocumentTextIcon },
 ]
 
 export default function Sidebar() {

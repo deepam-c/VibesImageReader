@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
-import Sidebar from '@/components/Sidebar'
+import CorporateHeader from '@/components/CorporateHeader'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Camera Capture App',
-  description: 'Professional camera capture web application',
+  title: 'Computer Vision Analytics',
+  description: 'Advanced computer vision analysis for clothing, accessories, and personal attributes',
 }
 
 export default function RootLayout({
@@ -14,10 +17,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <div className="flex h-screen bg-gray-50">
-          <Sidebar />
-          <main className="flex-1 overflow-auto">
+      <body className={inter.className}>
+        <div className="min-h-screen bg-gray-50">
+          <CorporateHeader />
+          <main className="corporate-container">
             {children}
           </main>
         </div>

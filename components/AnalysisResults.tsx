@@ -4,10 +4,10 @@ import React from 'react'
 
 interface AnalysisResultsProps {
   results: any
-  isVisible: boolean
+  isVisible?: boolean
 }
 
-const AnalysisResults: React.FC<AnalysisResultsProps> = ({ results, isVisible }) => {
+const AnalysisResults: React.FC<AnalysisResultsProps> = ({ results, isVisible = true }) => {
   if (!isVisible || !results?.success) {
     return null
   }
