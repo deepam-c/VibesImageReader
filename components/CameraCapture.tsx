@@ -180,6 +180,9 @@ export default function CameraCapture({ onImageCapture }: CameraCaptureProps) {
   const analyzeImageWithCV = useCallback(async (imageDataUrl: string) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      console.log('🔍 DEBUG: API URL being used:', apiUrl)
+      console.log('🔍 DEBUG: Environment variable NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL)
+      
       const response = await fetch(`${apiUrl}/analyze-image`, {
         method: 'POST',
         headers: {
