@@ -7,6 +7,7 @@ from typing import List, Dict, Any, Tuple
 import pickle
 import os
 from ultralytics import YOLO
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,7 @@ class PersonAnalyzer:
         Main analysis function that coordinates all analysis tasks
         """
         results = {
-            'timestamp': np.datetime64('now').isoformat(),
+            'timestamp': datetime.now().isoformat(),
             'image_info': self.get_image_info(image),
             'people': [],
             'summary': {}
