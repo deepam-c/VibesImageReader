@@ -330,4 +330,5 @@ curl -X POST http://localhost:5000/health
 - Monitor for malicious image uploads
 
 ## License
-This project uses various open-source models and libraries. Please check individual model licenses for commercial usage restrictions. 
+This project uses various open-source models and libraries. Please check individual model licenses for commercial usage restrictions. #   T r i g g e r   d e p l o y m e n t  
+ 
