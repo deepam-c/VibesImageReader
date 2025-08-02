@@ -78,5 +78,9 @@ jobs:
         az containerapp update \
           --name "${{ env.CONTAINER_APP_NAME }}" \
           --resource-group "${{ env.RESOURCE_GROUP }}" \
-          --image "$IMAGE_TAG" \
+          --image "$IMAGE_TAG"
+          
+        az containerapp ingress update \
+          --name "${{ env.CONTAINER_APP_NAME }}" \
+          --resource-group "${{ env.RESOURCE_GROUP }}" \
           --target-port 5000 
