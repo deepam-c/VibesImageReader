@@ -66,7 +66,7 @@ resource backendContainerApp 'Microsoft.App/containerApps@2023-05-01' = {
     configuration: {
       ingress: {
         external: true
-        targetPort: 5000
+        targetPort: 80
         allowInsecure: false
         traffic: [
           {
@@ -93,7 +93,7 @@ resource backendContainerApp 'Microsoft.App/containerApps@2023-05-01' = {
       containers: [
         {
           name: 'vibes-backend'
-          image: containerImage
+          image: 'nginx:latest'
           resources: {
             cpu: json('1.0')
             memory: '2Gi'

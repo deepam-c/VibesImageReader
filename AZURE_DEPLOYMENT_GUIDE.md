@@ -351,3 +351,157 @@ If you encounter issues:
 Your application should now be running on:
 - **Frontend**: `https://your-static-web-app.azurestaticapps.net`
 - **Backend**: `https://your-container-app.azurecontainerapps.io` 
+
+## 🔍 **Step 1: Check What Image is Currently Running**
+
+In **Azure Cloud Shell**, let's see what's actually deployed:
+
+```bash
+<code_block_to_apply_changes_from>
+```
+
+## 🔧 **Step 2: Manually Update to Flask Image**
+
+Let's manually update the container to use your Flask backend:
+
+```bash
+# Get the correct image tag
+IMAGE_TAG="vibesregistryprods.azurecr.io/vibes-backend:8a2af75"
+
+# Update container app to use Flask backend
+az containerapp update \
+  --name vibes-backend-prod \
+  --resource-group vibesCognizant \
+  --image $IMAGE_TAG
+```
+
+## 🔍 **Step 3: Verify the Flask Image Exists**
+
+Let's check if your Flask image was actually built and pushed:
+
+```bash
+# List images in your registry
+az acr repository list --name vibesregistryprods --output table
+
+# Check specific image tags
+az acr repository show-tags --name vibesregistryprods --repository vibes-backend --output table
+```
+
+## 🎯 **Most Likely Issues:**
+
+### **Issue A: Image Build Failed**
+- The **Docker build succeeded** but image wasn't properly tagged
+- **Solution**: Check the exact image tag that was pushed
+
+### **Issue B: Container App Didn't Update**
+- The **registry set** command worked, but image update failed
+- **Solution**: Force container app to use the new image
+
+### **Issue C: Wrong Image Tag**
+- **Container App** is looking for a different tag than what was pushed
+- **Solution**: Use the exact image tag from the build
+
+## 🚀 **Quick Fix Commands:**
+
+**Run these in Azure Cloud Shell:**
+
+```bash
+# 1. Check what's currently running
+az containerapp show --name vibes-backend-prod --resource-group vibesCognizant --query "properties.template.containers[0].image"
+
+# 2. List available Flask images
+az acr repository show-tags --name vibesregistryprods --repository vibes-backend --output table
+
+# 3. Force update to latest Flask image (replace with actual tag)
+az containerapp update \
+  --name vibes-backend-prod \
+  --resource-group vibesCognizant \
+  --image vibesregistryprods.azurecr.io/vibes-backend:latest
+
+# 4. Restart the container app
+az containerapp restart \
+  --name vibes-backend-prod \
+  --resource-group vibesCognizant
+```
+
+## 📊 **Expected Result:**
+
+After running these commands:
+- **Welcome page should disappear**
+- **`/health` should return**: `{"status": "healthy", "timestamp": "...", "service": "Human Analysis API"}`
+- **`/analyze-image` should return**: Method not allowed (GET) or proper POST endpoint
+
+## 🔍 **Let's Debug Step by Step:**
+
+**Can you run the first command and tell me:**
+1. **What image is currently running?** (from the first command)
+2. **What Flask images are available?** (from the second command)
+
+Once I know this, I can give you the exact command to fix it! 🔧
+
+The issue is definitely that **nginx is still running instead of your Flask backend**. 
+
+## 🔧 **Corrected Commands (Run these one by one):**
+
+### **1. Check what's currently running:**
+```bash
+az containerapp show --name vibes-backend-prod --resource-group vibesCognizant --query "properties.template.containers[0].image"
+```
+
+### **2. List available Flask images:**
+```bash
+az acr repository list --name vibesregistryprods --output table
+```
+
+### **3. Check specific vibes-backend tags:**
+```bash
+az acr repository show-tags --name vibesregistryprods --repository vibes-backend --output table
+```
+
+### **4. Force update to Flask image (use the latest commit):**
+```bash
+az containerapp update \
+  --name vibes-backend-prod \
+  --resource-group vibesCognizant \
+  --image vibesregistryprods.azurecr.io/vibes-backend:8a2af75
+```
+
+### **5. Alternative restart (if needed):**
+```bash
+# Instead of restart, use revision restart
+az containerapp revision restart \
+  --name vibes-backend-prod \
+  --resource-group vibesCognizant \
+  --revision $(az containerapp revision list --name vibes-backend-prod --resource-group vibesCognizant --query "[0].name" -o tsv)
+```
+
+## 🎯 **Or Simpler Approach:**
+
+**Just run the update command with the specific image tag:**
+
+```bash
+az containerapp update \
+  --name vibes-backend-prod \
+  --resource-group vibesCognizant \
+  --image vibesregistryprods.azurecr.io/vibes-backend:8a2af75
+```
+
+This should automatically restart the container with your Flask backend.
+
+## 📊 **Let's Start Step by Step:**
+
+**Run these commands one by one and tell me the output:**
+
+1. **First, check what image is currently running:**
+   ```bash
+   az containerapp show --name vibes-backend-prod --resource-group vibesCognizant --query "properties.template.containers[0].image"
+   ```
+
+2. **Then check what Flask images are available:**
+   ```bash
+   az acr repository show-tags --name vibesregistryprods --repository vibes-backend --output table
+   ```
+
+Once I see these outputs, I'll give you the exact command to switch from nginx to your Flask backend! 🔧
+
+The `restart` command issue is just a version compatibility problem - the update command will work fine. 
