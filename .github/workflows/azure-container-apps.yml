@@ -4,16 +4,12 @@ on:
   push:
     branches:
       - master
-    paths:
-      - 'backend/**'
-      - '!backend/README*.md'
-      - '!backend/tests/**'
   workflow_dispatch:
 
 env:
-  AZURE_CONTAINER_REGISTRY: vibesregistryprod
+  AZURE_CONTAINER_REGISTRY: vibesregistryprods
   CONTAINER_NAME: vibes-backend
-  RESOURCE_GROUP: vibes-rg
+  RESOURCE_GROUP: vibesCognizant
   CONTAINER_APP_NAME: vibes-backend-prod
   CONTAINER_APP_ENVIRONMENT: vibes-env-prod
 
