@@ -78,7 +78,10 @@ jobs:
         az containerapp update \
           --name "${{ env.CONTAINER_APP_NAME }}" \
           --resource-group "${{ env.RESOURCE_GROUP }}" \
-          --image "$IMAGE_TAG"
+          --image "$IMAGE_TAG" \
+          --registry-server "${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io" \
+          --registry-username "${{ secrets.AZURE_REGISTRY_USERNAME }}" \
+          --registry-password "${{ secrets.AZURE_REGISTRY_PASSWORD }}"
           
         az containerapp ingress update \
           --name "${{ env.CONTAINER_APP_NAME }}" \
