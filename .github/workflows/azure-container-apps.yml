@@ -66,11 +66,13 @@ jobs:
         echo "Image tag from build job: ${{ needs.build.outputs.image-tag }}"
         echo "Container app name: ${{ env.CONTAINER_APP_NAME }}"
         echo "Resource group: ${{ env.RESOURCE_GROUP }}"
+        echo "GitHub SHA: ${{ github.sha }}"
         
         IMAGE_TAG="${{ needs.build.outputs.image-tag }}"
         if [ -z "$IMAGE_TAG" ]; then
-          echo "ERROR: Image tag is empty!"
-          exit 1
+          echo "Build output is empty, constructing image tag manually..."
+          IMAGE_TAG="${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}"
+          echo "Constructed image tag: $IMAGE_TAG"
         fi
         
         az containerapp update \
