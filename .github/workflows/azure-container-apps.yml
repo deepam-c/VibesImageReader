@@ -63,8 +63,18 @@ jobs:
 
     - name: Deploy to Azure Container Apps
       run: |
+        echo "Image tag from build job: ${{ needs.build.outputs.image-tag }}"
+        echo "Container app name: ${{ env.CONTAINER_APP_NAME }}"
+        echo "Resource group: ${{ env.RESOURCE_GROUP }}"
+        
+        IMAGE_TAG="${{ needs.build.outputs.image-tag }}"
+        if [ -z "$IMAGE_TAG" ]; then
+          echo "ERROR: Image tag is empty!"
+          exit 1
+        fi
+        
         az containerapp update \
-          --name ${{ env.CONTAINER_APP_NAME }} \
-          --resource-group ${{ env.RESOURCE_GROUP }} \
-          --image ${{ needs.build.outputs.image-tag }} \
+          --name "${{ env.CONTAINER_APP_NAME }}" \
+          --resource-group "${{ env.RESOURCE_GROUP }}" \
+          --image "$IMAGE_TAG" \
           --target-port 5000 
