@@ -10,6 +10,7 @@ numpy>=1.24.0
 # Deep Learning and AI Models
 deepface>=0.0.79
 mediapipe>=0.10.0
+ultralytics>=8.0.0
 
 # TensorFlow and Keras - fixed compatibility for deepface
 tensorflow>=2.16.0,<2.19.0
