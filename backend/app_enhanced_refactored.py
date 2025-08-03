@@ -275,6 +275,58 @@ def create_enhanced_app() -> Flask:
             logger.error(f"Error in AI test: {e}")
             return jsonify({'test_status': 'error', 'error': str(e)}), 500
     
+    @app.route('/debug/firebase-count', methods=['GET'])
+    def debug_firebase_count():
+        """Debug endpoint to check Firebase connection and record count"""
+        try:
+            if hasattr(export_service, 'data_repository') and export_service.data_repository:
+                import asyncio
+                
+                # Handle async call properly
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                
+                # Get all analyses
+                analyses = loop.run_until_complete(
+                    export_service.data_repository.get_all_analyses()
+                )
+                
+                # Create summary
+                record_summaries = []
+                for i, analysis in enumerate(analyses):
+                    summary = {
+                        'index': i,
+                        'id': getattr(analysis, 'id', 'no_id'),
+                        'timestamp': str(analysis.timestamp) if analysis.timestamp else 'no_timestamp',
+                        'has_detection_summary': bool(analysis.detection_summary),
+                        'people_count': len(analysis.people_analysis) if analysis.people_analysis else 0
+                    }
+                    record_summaries.append(summary)
+                
+                return jsonify({
+                    'success': True,
+                    'firebase_connected': True,
+                    'total_records': len(analyses),
+                    'records': record_summaries
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'firebase_connected': False,
+                    'error': 'No Firebase repository available'
+                })
+                
+        except Exception as e:
+            logger.error(f"Debug Firebase count error: {e}")
+            return jsonify({
+                'success': False,
+                'firebase_connected': False,
+                'error': str(e)
+            }), 500
+    
     logger.info("🚀 Enhanced CV API created successfully")
     return app
 

@@ -92,20 +92,34 @@ class FirebaseAnalysisRepository(IAnalysisRepository):
     async def get_all_analyses(self, limit: Optional[int] = None) -> List[CVAnalysisEntity]:
         """Get all analyses from Firestore"""
         try:
+            logger.info(f"Starting get_all_analyses with limit: {limit}")
+            
             query = self._db.collection('cvAnalyses').order_by('timestamp', direction=firestore.Query.DESCENDING)
             
             if limit:
+                logger.info(f"Applying limit of {limit}")
                 query = query.limit(limit)
+            else:
+                logger.info("No limit applied - fetching all records")
             
+            logger.info("Executing Firestore query...")
             docs = query.stream()
             
             analyses = []
+            doc_count = 0
             for doc in docs:
-                data = doc.to_dict()
-                data['id'] = doc.id
-                analyses.append(self._dict_to_entity(data))
+                doc_count += 1
+                try:
+                    data = doc.to_dict()
+                    data['id'] = doc.id
+                    entity = self._dict_to_entity(data)
+                    analyses.append(entity)
+                    logger.debug(f"Successfully processed document {doc_count}: {doc.id}")
+                except Exception as e:
+                    logger.error(f"Error processing document {doc_count} (ID: {doc.id}): {e}")
+                    continue
             
-            logger.info(f"Retrieved {len(analyses)} analyses from Firebase")
+            logger.info(f"Retrieved {len(analyses)} analyses from Firebase (processed {doc_count} documents)")
             return analyses
             
         except Exception as e:

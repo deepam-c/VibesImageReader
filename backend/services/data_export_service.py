@@ -102,8 +102,12 @@ class DataExportService(IExportService):
         Get analysis data for export
         Fetches real data from Firebase repository if available
         """
+        logger.info(f"_get_analysis_data called with kwargs: {kwargs}")
+        
         if self.data_repository:
             try:
+                logger.info("Firebase repository available, attempting to fetch data...")
+                
                 # Handle async call properly
                 try:
                     loop = asyncio.get_event_loop()
@@ -112,25 +116,33 @@ class DataExportService(IExportService):
                     asyncio.set_event_loop(loop)
                 
                 # Fetch all analyses from repository
+                logger.info("Calling get_all_analyses...")
                 analyses_entities = loop.run_until_complete(
                     self.data_repository.get_all_analyses(limit=kwargs.get('limit'))
                 )
                 
+                logger.info(f"Firebase returned {len(analyses_entities)} entities")
+                
                 # Convert entities to dictionaries for export
                 analyses_data = []
-                for entity in analyses_entities:
-                    analysis_dict = {
-                        'id': getattr(entity, 'id', 'unknown'),
-                        'timestamp': entity.timestamp,
-                        'imageMetadata': entity.image_metadata,
-                        'processingInfo': entity.processing_info,
-                        'detectionSummary': entity.detection_summary,
-                        'peopleAnalysis': entity.people_analysis,
-                        'sceneAnalysis': entity.scene_analysis
-                    }
-                    analyses_data.append(analysis_dict)
+                for i, entity in enumerate(analyses_entities):
+                    try:
+                        analysis_dict = {
+                            'id': getattr(entity, 'id', f'unknown_{i}'),
+                            'timestamp': entity.timestamp,
+                            'imageMetadata': entity.image_metadata,
+                            'processingInfo': entity.processing_info,
+                            'detectionSummary': entity.detection_summary,
+                            'peopleAnalysis': entity.people_analysis,
+                            'sceneAnalysis': entity.scene_analysis
+                        }
+                        analyses_data.append(analysis_dict)
+                        logger.debug(f"Successfully converted entity {i} to dict")
+                    except Exception as e:
+                        logger.error(f"Error converting entity {i} to dict: {e}")
+                        continue
                 
-                logger.info(f"Successfully fetched {len(analyses_data)} real analyses from Firebase")
+                logger.info(f"Successfully converted {len(analyses_data)} entities to dictionaries")
                 return analyses_data
                 
             except Exception as e:
