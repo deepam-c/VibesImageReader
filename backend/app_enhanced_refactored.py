@@ -29,8 +29,40 @@ def create_enhanced_app() -> Flask:
          ],
          methods=['GET', 'POST', 'OPTIONS'],
          allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
-         supports_credentials=False
+         supports_credentials=False,
+         resources={
+             r"/*": {
+                 "origins": [
+                     'https://orange-sea-0ffac2603.2.azurestaticapps.net',
+                     'http://localhost:3000',
+                     'http://localhost:3001',
+                     'https://localhost:3000'
+                 ]
+             }
+         }
     )
+    
+    # Additional CORS headers for robust cross-origin support
+    @app.after_request
+    def after_request(response):
+        origin = request.headers.get('Origin')
+        allowed_origins = [
+            'https://orange-sea-0ffac2603.2.azurestaticapps.net',
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'https://localhost:3000'
+        ]
+        
+        if origin in allowed_origins:
+            response.headers['Access-Control-Allow-Origin'] = origin
+        else:
+            # Default to production frontend for any unspecified origin
+            response.headers['Access-Control-Allow-Origin'] = 'https://orange-sea-0ffac2603.2.azurestaticapps.net'
+            
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+        response.headers['Access-Control-Max-Age'] = '3600'
+        return response
     
     # Initialize enhanced image processor
     enhanced_processor = SmartImageProcessor()
@@ -50,6 +82,11 @@ def create_enhanced_app() -> Flask:
     @app.route('/analyze-image', methods=['OPTIONS'])
     def analyze_image_options():
         """Handle CORS preflight for analyze-image endpoint"""
+        return '', 200
+    
+    @app.route('/<path:path>', methods=['OPTIONS'])
+    def handle_options(path):
+        """Handle CORS preflight for all endpoints"""
         return '', 200
     
     @app.route('/analyze-image', methods=['POST'])
