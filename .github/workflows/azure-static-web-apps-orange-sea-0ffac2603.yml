@@ -4,10 +4,31 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'next.config.js'
+      - 'tailwind.config.js'
+      - 'tsconfig.json'
+      - '.env.example'
+      - '.github/workflows/azure-static-web-apps-orange-sea-0ffac2603.yml'
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
       - master
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'next.config.js'
+      - 'tailwind.config.js'
+      - 'tsconfig.json'
+      - '.env.example'
 
 jobs:
   build_and_deploy_job:
