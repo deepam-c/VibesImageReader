@@ -19,7 +19,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend integration
+
+# Configure CORS with explicit settings for Azure deployment
+CORS(app, 
+     origins=[
+         'https://orange-sea-0ffac2603.2.azurestaticapps.net',  # Production frontend
+         'http://localhost:3000',  # Local development
+         'http://localhost:3001',  # Alternative local port
+         'https://*.azurestaticapps.net'  # Any Azure Static Web App
+     ],
+     methods=['GET', 'POST', 'OPTIONS'],
+     allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
+     supports_credentials=False
+)
 
 # Initialize components
 person_analyzer = PersonAnalyzer()
