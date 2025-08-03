@@ -1,13 +1,32 @@
 import cv2
 import numpy as np
-import mediapipe as mp
-from deepface import DeepFace
 import logging
 from typing import List, Dict, Any, Tuple
 import pickle
 import os
-from ultralytics import YOLO
 from datetime import datetime
+
+# Optional dependencies with graceful fallback
+try:
+    import mediapipe as mp
+    MEDIAPIPE_AVAILABLE = True
+except ImportError:
+    MEDIAPIPE_AVAILABLE = False
+    mp = None
+
+try:
+    from deepface import DeepFace
+    DEEPFACE_AVAILABLE = True
+except ImportError:
+    DEEPFACE_AVAILABLE = False
+    DeepFace = None
+
+try:
+    from ultralytics import YOLO
+    ULTRALYTICS_AVAILABLE = True
+except ImportError:
+    ULTRALYTICS_AVAILABLE = False
+    YOLO = None
 
 logger = logging.getLogger(__name__)
 
@@ -24,27 +43,33 @@ class PersonAnalyzer:
         """Initialize all computer vision models"""
         try:
             # MediaPipe for pose and face detection
-            self.mp_face_detection = mp.solutions.face_detection
-            self.mp_pose = mp.solutions.pose
-            self.mp_hands = mp.solutions.hands
-            self.mp_drawing = mp.solutions.drawing_utils
-            
-            self.face_detection = self.mp_face_detection.FaceDetection(
-                model_selection=1, min_detection_confidence=0.5
-            )
-            self.pose = self.mp_pose.Pose(
-                static_image_mode=True,
-                model_complexity=2,
-                enable_segmentation=True,
-                min_detection_confidence=0.5
-            )
+            if MEDIAPIPE_AVAILABLE:
+                self.mp_face_detection = mp.solutions.face_detection
+                self.mp_pose = mp.solutions.pose
+                self.mp_hands = mp.solutions.hands
+                self.mp_drawing = mp.solutions.drawing_utils
+                
+                self.face_detection = self.mp_face_detection.FaceDetection(
+                    model_selection=1, min_detection_confidence=0.5
+                )
+                self.pose = self.mp_pose.Pose(
+                    static_image_mode=True,
+                    model_complexity=2,
+                    enable_segmentation=True,
+                    min_detection_confidence=0.5
+                )
+            else:
+                logger.warning("MediaPipe models not available. Skipping initialization.")
             
             # YOLO for object detection (clothing, accessories)
-            try:
-                self.yolo_model = YOLO('yolov8n.pt')  # Will download if not present
-            except Exception as e:
-                logger.warning(f"YOLO model not available: {e}")
-                self.yolo_model = None
+            if ULTRALYTICS_AVAILABLE:
+                try:
+                    self.yolo_model = YOLO('yolov8n.pt')  # Will download if not present
+                except Exception as e:
+                    logger.warning(f"YOLO model not available: {e}")
+                    self.yolo_model = None
+            else:
+                logger.warning("YOLO model not available. Skipping initialization.")
             
             # Hair cascade classifier
             self.load_hair_classifier()
@@ -121,6 +146,10 @@ class PersonAnalyzer:
     def detect_faces(self, rgb_image: np.ndarray) -> List[Dict[str, Any]]:
         """Detect faces in the image"""
         faces = []
+        if not MEDIAPIPE_AVAILABLE:
+            logger.warning("MediaPipe face detection models not available. Skipping face detection.")
+            return faces
+
         try:
             results = self.face_detection.process(rgb_image)
             
@@ -148,6 +177,10 @@ class PersonAnalyzer:
     def detect_poses(self, rgb_image: np.ndarray) -> List[Dict[str, Any]]:
         """Detect human poses in the image"""
         poses = []
+        if not MEDIAPIPE_AVAILABLE:
+            logger.warning("MediaPipe pose detection models not available. Skipping pose detection.")
+            return poses
+
         try:
             results = self.pose.process(rgb_image)
             
@@ -214,6 +247,14 @@ class PersonAnalyzer:
         """Detailed face analysis including age, gender, emotion"""
         face_analysis = {}
         
+        if not DEEPFACE_AVAILABLE:
+            logger.warning("DeepFace models not available. Skipping face analysis.")
+            face_analysis['age'] = {'estimated_age': 0, 'age_range': 'unknown'}
+            face_analysis['gender'] = {'prediction': 'unknown', 'confidence': 0}
+            face_analysis['emotion'] = {'dominant_emotion': 'unknown', 'all_emotions': {}}
+            face_analysis['face_features'] = self.analyze_face_features(face_region)
+            return face_analysis
+
         try:
             # Convert face region back to BGR for DeepFace
             face_bgr = cv2.cvtColor(face_region, cv2.COLOR_RGB2BGR)
@@ -283,6 +324,10 @@ class PersonAnalyzer:
             'hair_texture': 'unknown'
         }
         
+        if not MEDIAPIPE_AVAILABLE:
+            logger.warning("MediaPipe models not available. Skipping hair analysis.")
+            return hair_analysis
+
         try:
             # Extend bbox upward to capture hair region
             h, w = image.shape[:2]
@@ -348,6 +393,10 @@ class PersonAnalyzer:
             'overall_style': 'unknown'
         }
         
+        if not ULTRALYTICS_AVAILABLE:
+            logger.warning("YOLO model not available. Skipping clothing and accessory analysis.")
+            return appearance_analysis
+
         try:
             # Use YOLO for object detection if available
             if self.yolo_model:
@@ -455,6 +504,10 @@ class PersonAnalyzer:
         """Detect clothing items using YOLO"""
         clothing_items = []
         
+        if not ULTRALYTICS_AVAILABLE:
+            logger.warning("YOLO model not available. Skipping clothing item detection.")
+            return clothing_items
+
         if self.yolo_model:
             try:
                 results = self.yolo_model(image)
