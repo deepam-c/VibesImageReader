@@ -18,7 +18,19 @@ def create_enhanced_app() -> Flask:
     
     # Create Flask app
     app = Flask(__name__)
-    CORS(app)
+    
+    # Configure CORS with explicit settings for Azure deployment
+    CORS(app, 
+         origins=[
+             'https://orange-sea-0ffac2603.2.azurestaticapps.net',  # Production frontend
+             'http://localhost:3000',  # Local development
+             'http://localhost:3001',  # Alternative local port
+             'https://*.azurestaticapps.net'  # Any Azure Static Web App
+         ],
+         methods=['GET', 'POST', 'OPTIONS'],
+         allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
+         supports_credentials=False
+    )
     
     # Initialize enhanced image processor
     enhanced_processor = SmartImageProcessor()
@@ -35,8 +47,13 @@ def create_enhanced_app() -> Flask:
             'architecture': 'Clean Architecture + Advanced AI'
         })
     
+    @app.route('/analyze-image', methods=['OPTIONS'])
+    def analyze_image_options():
+        """Handle CORS preflight for analyze-image endpoint"""
+        return '', 200
+    
     @app.route('/analyze-image', methods=['POST'])
-    async def analyze_image():
+    def analyze_image():
         """Enhanced image analysis endpoint"""
         try:
             data = request.get_json()
@@ -44,8 +61,8 @@ def create_enhanced_app() -> Flask:
             if not data or 'image' not in data:
                 return jsonify({'error': 'No image data provided'}), 400
             
-            # Process with enhanced AI
-            result = await enhanced_processor.analyze_image(data['image'])
+            # Process with enhanced AI (synchronous call)
+            result = enhanced_processor.analyze_image_sync(data['image'])
             
             # Add analysis ID for tracking
             result['analysis_id'] = f"enhanced_{datetime.now().strftime('%Y%m%d_%H%M%S')}"

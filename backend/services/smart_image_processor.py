@@ -54,6 +54,23 @@ class SmartImageProcessor(IImageProcessor):
         self.deepface_available = DEEPFACE_AVAILABLE
         logger.info(f"SmartImageProcessor initialized - AI Models: {'DeepFace Available' if DEEPFACE_AVAILABLE else 'Mock Mode'}")
     
+    def analyze_image_sync(self, image_data: str) -> Dict[str, Any]:
+        """Synchronous wrapper for analyze_image for Flask compatibility"""
+        import asyncio
+        
+        # Create new event loop if none exists
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_closed():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        # Run the async method synchronously
+        return loop.run_until_complete(self.analyze_image(image_data))
+    
     async def analyze_image(self, image_data: str) -> Dict[str, Any]:
         """Process image and return comprehensive AI analysis"""
         try:
