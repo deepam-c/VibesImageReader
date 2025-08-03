@@ -95,6 +95,16 @@ export default function CameraCapture({ onImageCapture }: CameraCaptureProps) {
   const retakePhoto = useCallback(() => {
     setCapturedImage(null)
     setUploadedImage(null)
+    setError('')
+    setIsLoading(false)
+    
+    // Stop camera if it's currently streaming
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream
+      stream.getTracks().forEach(track => track.stop())
+      videoRef.current.srcObject = null
+    }
+    setIsStreaming(false)
   }, [])
 
   // Helper function to save analysis data to Firebase
