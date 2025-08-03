@@ -9,6 +9,7 @@ import logging
 from datetime import datetime
 from services.smart_image_processor import SmartImageProcessor
 from services.data_export_service import DataExportService
+from infrastructure.repositories.firebase_repository import FirebaseAnalysisRepository
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -67,7 +68,16 @@ def create_enhanced_app() -> Flask:
     
     # Initialize services
     enhanced_processor = SmartImageProcessor()
-    export_service = DataExportService()
+    
+    # Initialize Firebase repository for data export
+    try:
+        firebase_config = {}  # Using default Firebase configuration
+        firebase_repo = FirebaseAnalysisRepository(firebase_config)
+        export_service = DataExportService(data_repository=firebase_repo)
+        logger.info("Export service initialized with Firebase repository")
+    except Exception as e:
+        logger.warning(f"Failed to initialize Firebase repository: {e}. Using mock data.")
+        export_service = DataExportService()  # Fallback to mock data
     
     @app.route('/health', methods=['GET'])
     def health_check():

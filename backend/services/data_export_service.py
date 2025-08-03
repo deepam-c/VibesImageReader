@@ -9,6 +9,7 @@ Follows SOLID principles:
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
 import logging
+import asyncio
 
 from core.interfaces import IExportService, IDataExporter
 from services.csv_export_service import CSVExporter
@@ -99,15 +100,48 @@ class DataExportService(IExportService):
     def _get_analysis_data(self, **kwargs) -> List[Dict[str, Any]]:
         """
         Get analysis data for export
-        This would typically fetch from a repository/database
-        
-        For now, returns mock data since we don't have direct database access
+        Fetches real data from Firebase repository if available
         """
-        # In a real implementation, this would use the injected repository
-        # return self.data_repository.get_all_analyses(**kwargs)
-        
-        # Mock data for demonstration
-        return self._get_mock_data()
+        if self.data_repository:
+            try:
+                # Handle async call properly
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                
+                # Fetch all analyses from repository
+                analyses_entities = loop.run_until_complete(
+                    self.data_repository.get_all_analyses(limit=kwargs.get('limit'))
+                )
+                
+                # Convert entities to dictionaries for export
+                analyses_data = []
+                for entity in analyses_entities:
+                    analysis_dict = {
+                        'id': getattr(entity, 'id', 'unknown'),
+                        'timestamp': entity.timestamp,
+                        'imageMetadata': entity.image_metadata,
+                        'processingInfo': entity.processing_info,
+                        'detectionSummary': entity.detection_summary,
+                        'peopleAnalysis': entity.people_analysis,
+                        'sceneAnalysis': entity.scene_analysis
+                    }
+                    analyses_data.append(analysis_dict)
+                
+                logger.info(f"Successfully fetched {len(analyses_data)} real analyses from Firebase")
+                return analyses_data
+                
+            except Exception as e:
+                logger.error(f"Error fetching data from repository: {e}")
+                logger.info("Falling back to mock data")
+                # Fall back to mock data if Firebase fails
+                return self._get_mock_data()
+        else:
+            # No repository available, use mock data
+            logger.info("No repository available, using mock data")
+            return self._get_mock_data()
     
     def _get_mock_data(self) -> List[Dict[str, Any]]:
         """
