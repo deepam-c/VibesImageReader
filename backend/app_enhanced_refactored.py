@@ -25,7 +25,7 @@ def create_enhanced_app() -> Flask:
              'https://orange-sea-0ffac2603.2.azurestaticapps.net',  # Production frontend
              'http://localhost:3000',  # Local development
              'http://localhost:3001',  # Alternative local port
-             'https://*.azurestaticapps.net'  # Any Azure Static Web App
+             'https://localhost:3000',  # HTTPS local development
          ],
          methods=['GET', 'POST', 'OPTIONS'],
          allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
