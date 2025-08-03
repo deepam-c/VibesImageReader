@@ -10,7 +10,8 @@ import {
   ClockIcon,
   EyeIcon,
   UserIcon,
-  SparklesIcon
+  SparklesIcon,
+  ArrowDownTrayIcon
 } from '@heroicons/react/24/outline'
 
 export default function ViewDataPage() {
@@ -20,6 +21,7 @@ export default function ViewDataPage() {
   const [selectedAnalysis, setSelectedAnalysis] = useState<CVAnalysisData | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterBy, setFilterBy] = useState<'all' | 'formal' | 'casual'>('all')
+  const [exportLoading, setExportLoading] = useState(false)
 
   useEffect(() => {
     loadAnalyses()
@@ -36,6 +38,49 @@ export default function ViewDataPage() {
       setError('Failed to load saved analyses. Please check your Firebase configuration.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const exportToCSV = async () => {
+    try {
+      setExportLoading(true)
+      
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${apiUrl}/export-data?format=csv`, {
+        method: 'GET',
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      // Get filename from response headers
+      const contentDisposition = response.headers.get('content-disposition')
+      let filename = 'cv_analysis_export.csv'
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+        if (filenameMatch) {
+          filename = filenameMatch[1]
+        }
+      }
+      
+      // Download the file
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+    } catch (error) {
+      console.error('Export failed:', error)
+      setError('Failed to export data. Please try again.')
+    } finally {
+      setExportLoading(false)
     }
   }
 
@@ -229,9 +274,31 @@ export default function ViewDataPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900">Analysis History</h2>
-              <span className="corporate-badge corporate-badge-info">
-                {filteredAnalyses.length} results
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="corporate-badge corporate-badge-info">
+                  {filteredAnalyses.length} results
+                </span>
+                <button
+                  onClick={exportToCSV}
+                  disabled={exportLoading || filteredAnalyses.length === 0}
+                  className={`btn-corporate-primary flex items-center gap-2 text-sm ${
+                    exportLoading || filteredAnalyses.length === 0
+                      ? 'opacity-50 cursor-not-allowed'
+                      : ''
+                  }`}
+                  title="Export analysis data to CSV"
+                >
+                  <ArrowDownTrayIcon className="w-4 h-4" />
+                  {exportLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Exporting...</span>
+                    </div>
+                  ) : (
+                    'Export CSV'
+                  )}
+                </button>
+              </div>
             </div>
             
             {filteredAnalyses.map((analysis) => (
