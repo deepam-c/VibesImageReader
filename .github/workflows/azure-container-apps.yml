@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 'backend/**'
+      - '.github/workflows/azure-container-apps.yml'
+      - 'backend/Dockerfile'
+      - 'backend/requirements*.txt'
   workflow_dispatch:
 
 env:
