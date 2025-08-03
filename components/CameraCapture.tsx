@@ -135,7 +135,7 @@ export default function CameraCapture({ onImageCapture }: CameraCaptureProps) {
         },
         detectionSummary: {
           peopleDetected: analysisResults.detection_summary?.people_detected || 0,
-          facesAnalyzed: analysisResults.detection_summary?.faces_analyzed || 0,
+          facesAnalyzed: analysisResults.detection_summary?.faces_analyzed || analysisResults.detection_summary?.faces_detected || 0,
           averageConfidence: analysisResults.detection_summary?.average_confidence || 0
         },
         peopleAnalysis: (analysisResults.people || []).map((person: any, index: number) => ({
