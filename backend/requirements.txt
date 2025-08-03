@@ -2,7 +2,7 @@
 Flask==2.3.3
 Flask-CORS==4.0.0
 
-# Computer Vision and Image Processing  
+# Computer Vision - OpenCV only (reliable)
 opencv-python-headless==4.8.1.78
 Pillow==10.0.1
 numpy==1.24.3
@@ -10,26 +10,16 @@ numpy==1.24.3
 # Web server
 gunicorn==21.2.0
 
-# Working AI dependencies - compatible versions
-tensorflow==2.12.0
-keras==2.12.0
-deepface==0.0.79
-
-# Additional ML libraries
-scikit-learn==1.3.0
-scipy==1.11.3
-pandas==2.0.3
-
-# Utilities
+# Basic utilities
 requests==2.31.0
 python-dotenv==1.0.0
 
-# Optional computer vision (working versions)
-mediapipe==0.10.7
+# Basic data processing
+pandas==2.0.3
 
 # Color analysis
 webcolors==1.13
 
-# Development and testing
+# Development and testing (optional)
 pytest==7.4.0
 pytest-flask==1.3.0 
