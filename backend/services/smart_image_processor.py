@@ -141,7 +141,9 @@ class SmartImageProcessor(IImageProcessor):
                     'processing_status': 'completed'
                 },
                 'detection_summary': {
+                    'people_detected': len(people_analysis),  # Add missing people count
                     'faces_detected': len(face_regions) if face_regions else 0,
+                    'faces_analyzed': len(people_analysis),  # Add faces_analyzed for frontend compatibility
                     'poses_detected': len(people_analysis),
                     'average_confidence': 0.9 if face_detected else (0.7 if person_detected else 0.2),
                     'gender_distribution': self._calculate_gender_distribution(people_analysis),
