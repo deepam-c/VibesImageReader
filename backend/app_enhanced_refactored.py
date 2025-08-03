@@ -3,11 +3,12 @@ Enhanced Refactored Flask application with advanced AI features
 Simple version for testing without complex dependency injection
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import logging
 from datetime import datetime
 from services.smart_image_processor import SmartImageProcessor
+from services.data_export_service import DataExportService
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -64,29 +65,32 @@ def create_enhanced_app() -> Flask:
         response.headers['Access-Control-Max-Age'] = '3600'
         return response
     
-    # Initialize enhanced image processor
+    # Initialize services
     enhanced_processor = SmartImageProcessor()
+    export_service = DataExportService()
     
     @app.route('/health', methods=['GET'])
     def health_check():
-        """Health check endpoint with AI status"""
+        """Health check endpoint"""
         return jsonify({
             'status': 'healthy',
             'timestamp': datetime.now().isoformat(),
-            'version': '2.1.0-enhanced-ai',
-            'service': 'Enhanced CV API with Advanced AI',
-            'ai_backend': 'DeepFace Available' if enhanced_processor.deepface_available else 'Enhanced Mock',
-            'architecture': 'Clean Architecture + Advanced AI'
+            'version': '2.1.0-enhanced-refactored',
+            'service': 'CV Analysis API'
         })
-    
-    @app.route('/analyze-image', methods=['OPTIONS'])
-    def analyze_image_options():
-        """Handle CORS preflight for analyze-image endpoint"""
-        return '', 200
-    
+
+    @app.route('/capabilities', methods=['GET'])
+    def get_capabilities():
+        """Get AI capabilities"""
+        try:
+            capabilities = enhanced_processor.get_capabilities()
+            return jsonify(capabilities)
+        except Exception as e:
+            logger.error(f"Error getting capabilities: {str(e)}")
+            return jsonify({'error': 'Failed to get capabilities'}), 500
+
     @app.route('/<path:path>', methods=['OPTIONS'])
     def handle_options(path):
-        """Handle CORS preflight for all endpoints"""
         return '', 200
     
     @app.route('/analyze-image', methods=['POST'])
@@ -143,6 +147,63 @@ def create_enhanced_app() -> Flask:
                 'success': False,
                 'fallback': True
             }), 500
+
+    @app.route('/export-data', methods=['GET'])
+    def export_data():
+        """Export analysis data in various formats"""
+        try:
+            # Get query parameters
+            format_type = request.args.get('format', 'csv').lower()
+            
+            logger.info(f"Received export request for format: {format_type}")
+            
+            # Validate format
+            supported_formats = export_service.get_supported_formats()
+            if format_type not in supported_formats:
+                return jsonify({
+                    'error': f'Unsupported format: {format_type}',
+                    'supported_formats': supported_formats
+                }), 400
+            
+            # Export data
+            data_bytes, content_type, filename = export_service.export_analyses(format_type)
+            
+            # Create response
+            response = Response(
+                data_bytes,
+                mimetype=content_type,
+                headers={
+                    'Content-Disposition': f'attachment; filename="{filename}"',
+                    'Content-Type': content_type,
+                    'Access-Control-Expose-Headers': 'Content-Disposition'
+                }
+            )
+            
+            logger.info(f"Successfully exported data as {format_type}, filename: {filename}")
+            return response
+            
+        except ValueError as ve:
+            logger.error(f"Validation error in export: {str(ve)}")
+            return jsonify({'error': str(ve)}), 400
+        except Exception as e:
+            logger.error(f"Error in export_data: {str(e)}")
+            return jsonify({
+                'error': f'Export failed: {str(e)}',
+                'success': False
+            }), 500
+
+    @app.route('/export-formats', methods=['GET'])
+    def get_export_formats():
+        """Get supported export formats"""
+        try:
+            formats = export_service.get_supported_formats()
+            return jsonify({
+                'supported_formats': formats,
+                'default_format': 'csv'
+            })
+        except Exception as e:
+            logger.error(f"Error getting export formats: {str(e)}")
+            return jsonify({'error': 'Failed to get export formats'}), 500
     
     @app.route('/test-simple', methods=['POST'])
     def test_simple():
@@ -165,34 +226,6 @@ def create_enhanced_app() -> Flask:
                 'error': f'Error: {str(e)}',
                 'success': False
             }), 500
-
-    @app.route('/capabilities', methods=['GET'])
-    def get_capabilities():
-        """Get enhanced system capabilities"""
-        try:
-            capabilities = enhanced_processor.get_capabilities()
-            
-            # Add system information
-            capabilities['system_info'] = {
-                'architecture': 'Clean Architecture + Advanced AI',
-                'version': '2.1.0-enhanced-ai',
-                'ai_models': 'DeepFace Available' if enhanced_processor.deepface_available else 'Enhanced Mock',
-                'features': [
-                    'Real-time AI processing',
-                    'Age and gender detection',
-                    'Emotion recognition',
-                    'Advanced face detection',
-                    'Hair and color analysis',
-                    'Scene analysis',
-                    'Multi-level confidence scoring'
-                ]
-            }
-            
-            return jsonify(capabilities)
-            
-        except Exception as e:
-            logger.error(f"Error getting capabilities: {e}")
-            return jsonify({'error': str(e)}), 500
     
     @app.route('/test-ai', methods=['POST'])
     async def test_ai():
