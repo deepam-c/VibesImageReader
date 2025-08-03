@@ -262,7 +262,7 @@ export default function ViewDataPage() {
                     </div>
                     <div className="flex gap-2">
                       <span className="corporate-badge corporate-badge-success">
-                        {(analysis.detectionSummary.averageConfidence * 100).toFixed(0)}%
+                        {((analysis.detectionSummary?.averageConfidence || 0) * 100).toFixed(0)}%
                       </span>
                     </div>
                   </div>
@@ -271,22 +271,22 @@ export default function ViewDataPage() {
                     <div className="flex items-center gap-2">
                       <UserIcon className="w-4 h-4 text-gray-400" />
                       <span className="text-gray-600">People:</span>
-                      <span className="font-medium">{analysis.detectionSummary.peopleDetected}</span>
+                      <span className="font-medium">{analysis.detectionSummary?.peopleDetected || 0}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <EyeIcon className="w-4 h-4 text-gray-400" />
                       <span className="text-gray-600">Faces:</span>
-                      <span className="font-medium">{analysis.detectionSummary.facesAnalyzed}</span>
+                      <span className="font-medium">{analysis.detectionSummary?.facesAnalyzed || 0}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <SparklesIcon className="w-4 h-4 text-gray-400" />
                       <span className="text-gray-600">Confidence:</span>
-                      <span className="font-medium">{(analysis.detectionSummary.averageConfidence * 100).toFixed(1)}%</span>
+                      <span className="font-medium">{((analysis.detectionSummary?.averageConfidence || 0) * 100).toFixed(1)}%</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <ClockIcon className="w-4 h-4 text-gray-400" />
                       <span className="text-gray-600">Time:</span>
-                      <span className="font-medium">{analysis.processingInfo.processingTime}ms</span>
+                      <span className="font-medium">{analysis.processingInfo?.processingTime || 0}ms</span>
                     </div>
                   </div>
 
