@@ -73,22 +73,44 @@ class SmartImageProcessor(IImageProcessor):
     
     async def analyze_image(self, image_data: str) -> Dict[str, Any]:
         """Process image and return comprehensive AI analysis"""
+        start_time = datetime.now()
+        
         try:
-            # Decode base64 image
+            # Decode and process image
             image = self._decode_base64_image(image_data)
-            
-            # Perform enhanced analysis with AI
-            start_time = datetime.now()
-            
-            # Enhanced person and face detection with AI
-            person_detected, face_detected, face_regions = await self._detect_person_and_face_enhanced(image)
             people_analysis = []
             
+            # Detect faces and people
+            person_detected, face_detected, face_regions = await self._detect_person_and_face_enhanced(image)
+            
+            # Limit face processing to prevent resource exhaustion
+            MAX_FACES_TO_PROCESS = 5  # Process maximum 5 faces to prevent timeouts
+            
             if person_detected and face_regions:
+                # Limit the number of faces processed
+                limited_faces = face_regions[:MAX_FACES_TO_PROCESS]
+                
+                logger.info(f"Detected {len(face_regions)} face(s), processing {len(limited_faces)} face(s) for AI analysis")
+                
                 # Analyze each detected person with AI
-                for i, face_region in enumerate(face_regions):
+                for i, face_region in enumerate(limited_faces):
                     person_analysis = await self._analyze_person_with_ai(image, face_region, i)
                     people_analysis.append(person_analysis)
+                    
+                # If we skipped faces due to limit, add a summary person
+                if len(face_regions) > MAX_FACES_TO_PROCESS:
+                    skipped_count = len(face_regions) - MAX_FACES_TO_PROCESS
+                    people_analysis.append({
+                        'person_id': len(limited_faces) + 1,
+                        'demographics': {
+                            'age': {'estimated_age': 'multiple', 'confidence': 'medium'},
+                            'gender': {'prediction': 'multiple', 'confidence': 'medium'}
+                        },
+                        'pose': {'detected': True, 'confidence': 0.8},
+                        'appearance': {'note': f'Additional {skipped_count} people detected but not analyzed individually'},
+                        'processing_note': f'Part of {skipped_count} additional people in image'
+                    })
+                    
             elif person_detected:
                 # Basic person analysis without face
                 person_analysis = await self._analyze_person_basic(image, 0)
@@ -110,15 +132,15 @@ class SmartImageProcessor(IImageProcessor):
                     'overall_confidence': 0.9 if face_detected else (0.7 if person_detected else 0.3),
                     'timestamp': datetime.now().isoformat(),
                     'image_dimensions': {
-                        'width': int(image.shape[1]),
-                        'height': int(image.shape[0]),
-                        'aspect_ratio': round(image.shape[1] / image.shape[0], 2)
+                        'width': image.shape[1],
+                        'height': image.shape[0],
+                        'channels': image.shape[2] if len(image.shape) > 2 else 1,
+                        'aspect_ratio': image.shape[1] / image.shape[0] if image.shape[0] > 0 else 0
                     },
-                    'processing_status': 'completed',
-                    'analysis_version': '2.1.0-enhanced-ai'
+                    'analysis_version': self.model_version,
+                    'processing_status': 'completed'
                 },
                 'detection_summary': {
-                    'total_people_detected': len(people_analysis),
                     'faces_detected': len(face_regions) if face_regions else 0,
                     'poses_detected': len(people_analysis),
                     'average_confidence': 0.9 if face_detected else (0.7 if person_detected else 0.2),
