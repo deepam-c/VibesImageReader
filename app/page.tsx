@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { 
   CameraIcon, 
@@ -5,15 +7,114 @@ import {
   EyeIcon,
   SparklesIcon,
   ClockIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  ArrowPathIcon,
+  WifiIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
+import { useDashboard } from '@/lib/useDashboard'
 
 export default function Home() {
+  const { data: dashboardData, loading, error, refresh, isConnected, connectionType, lastUpdated } = useDashboard()
+  
+  // Add connection status indicator
+  const getConnectionStatusColor = () => {
+    if (!isConnected) return 'bg-red-500'
+    if (connectionType === 'firebase_realtime') return 'bg-green-500'
+    if (connectionType === 'firebase_polling') return 'bg-blue-500'
+    return 'bg-gray-500'
+  }
+  
+  const getConnectionStatusText = () => {
+    if (!isConnected) return 'Disconnected'
+    if (connectionType === 'firebase_realtime') return 'Firebase Real-time'
+    if (connectionType === 'firebase_polling') return 'Firebase Connected'
+    return 'Connected'
+  }
+  
+  const getConnectionDescription = () => {
+    if (!isConnected) return 'No connection to Firebase'
+    if (connectionType === 'firebase_realtime') return 'Real-time Updates • Firebase onSnapshot'
+    if (connectionType === 'firebase_polling') return 'Firebase Direct • Live Data'
+    return 'Connected'
+  }
+  
+  // Use real-time data or show loading/error state
+  const data = dashboardData
+  
+  // Show loading state if no data and still loading
+  if (loading && !data) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600">Connecting to dashboard...</p>
+          <p className="text-sm text-gray-500">Status: {getConnectionStatusText()}</p>
+        </div>
+      </div>
+    )
+  }
+  
+  // Show error state if there's an error and no data
+  if (error && !data) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <h3 className="font-bold">Connection Error</h3>
+            <p className="text-sm">{error}</p>
+            <p className="text-xs mt-2">Status: {getConnectionStatusText()}</p>
+          </div>
+          <button
+            onClick={refresh}
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    )
+  }
+  
+  // Show placeholder state if no data available
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-gray-600">No dashboard data available</p>
+          <p className="text-sm text-gray-500">Status: {getConnectionStatusText()}</p>
+          <button
+            onClick={refresh}
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Load Dashboard
+          </button>
+        </div>
+      </div>
+    )
+  }
+  
   const stats = [
-    { label: 'Images Analyzed', value: '2,847', change: '+12%' },
-    { label: 'People Detected', value: '5,234', change: '+8%' },
-    { label: 'Clothing Items', value: '12,567', change: '+23%' },
-    { label: 'Accuracy Rate', value: '94.8%', change: '+2%' },
+    {
+      label: 'Images Analyzed',
+      value: data.stats?.images_analyzed?.value || '0',
+      change: data.stats?.images_analyzed?.change || '+0%'
+    },
+    {
+      label: 'People Detected',
+      value: data.stats?.people_detected?.value || '0',
+      change: data.stats?.people_detected?.change || '+0%'
+    },
+    {
+      label: 'Clothing Items',
+      value: data.stats?.clothing_items?.value || '0',
+      change: data.stats?.clothing_items?.change || '+0%'
+    },
+    {
+      label: 'Avg Confidence',
+      value: data.stats?.accuracy_rate?.value || '0%',
+      change: data.stats?.accuracy_rate?.change || '+0%'
+    }
   ]
 
   const features = [
@@ -40,12 +141,7 @@ export default function Home() {
     }
   ]
 
-  const recentActivity = [
-    { action: 'CV Analysis Completed', details: 'Formal outfit detected with accessories', time: '2 min ago' },
-    { action: 'New Image Processed', details: 'Person detected with casual style', time: '5 min ago' },
-    { action: 'Data Export Completed', details: 'Analytics report generated', time: '12 min ago' },
-    { action: 'System Update', details: 'Enhanced clothing detection model', time: '1 hour ago' },
-  ]
+  const recentActivity = data.recent_activity
 
   return (
     <div className="fade-in">
@@ -60,6 +156,35 @@ export default function Home() {
               <p className="text-gray-600 text-lg">
                 Advanced computer vision analysis for clothing, accessories, and personal attributes
               </p>
+              
+              {/* Real-time status indicator */}
+              <div className="flex items-center gap-4 mt-3">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${getConnectionStatusColor()} ${isConnected ? 'animate-pulse' : ''}`}></div>
+                  <WifiIcon className={`w-4 h-4 ${isConnected ? (connectionType === 'firebase_realtime' ? 'text-green-500' : 'text-blue-500') : 'text-red-500'}`} />
+                  <span className={`text-sm font-medium ${isConnected ? (connectionType === 'firebase_realtime' ? 'text-green-600' : 'text-blue-600') : 'text-red-600'}`}>
+                    {isConnected ? (connectionType === 'firebase_realtime' ? '🟢 LIVE' : '🟡 LIVE') : '🔴 OFFLINE'}
+                  </span>
+                  <span className="text-gray-400 text-xs">•</span>
+                  <span className="text-sm text-gray-600">
+                    {getConnectionDescription()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ClockIcon className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm text-gray-500">
+                    {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Never'}
+                  </span>
+                </div>
+                <button
+                  onClick={refresh}
+                  disabled={loading}
+                  className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
+                >
+                  <ArrowPathIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                  Manual Refresh
+                </button>
+              </div>
             </div>
             <div className="flex gap-3">
               <Link href="/capture" className="btn-corporate-primary">
@@ -150,25 +275,49 @@ export default function Home() {
           <div className="corporate-card">
             <div className="corporate-card-header">
               <h2 className="corporate-card-title">System Status</h2>
-              <span className="corporate-badge corporate-badge-success">All Systems Operational</span>
+              <span className={`corporate-badge ${
+                data.system_status.overall === 'All Systems Operational' 
+                  ? 'corporate-badge-success' 
+                  : 'corporate-badge-warning'
+              }`}>
+                {data.system_status.overall}
+              </span>
             </div>
             <div className="corporate-card-content">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">CV Backend</span>
-                  <span className="corporate-badge corporate-badge-success">Online</span>
+                  <span className={`corporate-badge ${
+                    data.system_status.cv_backend === 'Online' 
+                      ? 'corporate-badge-success' 
+                      : 'corporate-badge-error'
+                  }`}>
+                    {data.system_status.cv_backend}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Database</span>
-                  <span className="corporate-badge corporate-badge-success">Connected</span>
+                  <span className={`corporate-badge ${
+                    data.system_status.database === 'Connected' 
+                      ? 'corporate-badge-success' 
+                      : 'corporate-badge-error'
+                  }`}>
+                    {data.system_status.database}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">AI Models</span>
-                  <span className="corporate-badge corporate-badge-success">Loaded</span>
+                  <span className={`corporate-badge ${
+                    data.system_status.ai_models === 'Loaded' 
+                      ? 'corporate-badge-success' 
+                      : 'corporate-badge-error'
+                  }`}>
+                    {data.system_status.ai_models}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Processing Speed</span>
-                  <span className="text-green-600 font-medium">~2.3s avg</span>
+                  <span className="text-green-600 font-medium">{data.system_status.processing_speed}</span>
                 </div>
               </div>
             </div>
@@ -207,28 +356,37 @@ export default function Home() {
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600">Detection Accuracy</span>
-                    <span className="font-medium">94.8%</span>
+                    <span className="font-medium">{data.performance_metrics.detection_accuracy.value}</span>
                   </div>
                   <div className="corporate-progress">
-                    <div className="corporate-progress-bar" style={{ width: '94.8%' }}></div>
+                    <div 
+                      className="corporate-progress-bar" 
+                      style={{ width: `${data.performance_metrics.detection_accuracy.percentage}%` }}
+                    ></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600">Processing Speed</span>
-                    <span className="font-medium">87%</span>
+                    <span className="font-medium">{data.performance_metrics.processing_speed.value}</span>
                   </div>
                   <div className="corporate-progress">
-                    <div className="corporate-progress-bar" style={{ width: '87%' }}></div>
+                    <div 
+                      className="corporate-progress-bar" 
+                      style={{ width: `${data.performance_metrics.processing_speed.percentage}%` }}
+                    ></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600">System Load</span>
-                    <span className="font-medium">42%</span>
+                    <span className="font-medium">{data.performance_metrics.system_load.value}</span>
                   </div>
                   <div className="corporate-progress">
-                    <div className="corporate-progress-bar" style={{ width: '42%' }}></div>
+                    <div 
+                      className="corporate-progress-bar" 
+                      style={{ width: `${data.performance_metrics.system_load.percentage}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>
