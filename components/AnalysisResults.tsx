@@ -109,9 +109,14 @@ const PersonAnalysis: React.FC<PersonAnalysisProps> = ({ person }) => {
               <div className="flex justify-between">
                 <span className="text-gray-600">Age:</span>
                 <span className="font-medium">
-                  {demographics.age.estimated_age !== 'unknown' ? 
-                    `${demographics.age.estimated_age} years (${demographics.age.age_range?.replace('_', ' ')})` :
-                    'Unknown'
+                  {typeof demographics.age === 'object' && demographics.age?.estimated_age 
+                    ? (demographics.age.estimated_age !== 'unknown' ? 
+                        `${demographics.age.estimated_age} years${demographics.age.age_range ? ` (${demographics.age.age_range.replace('_', ' ')})` : ''}` :
+                        'Unknown'
+                      )
+                    : typeof demographics.age === 'object' && demographics.age?.prediction
+                      ? `${demographics.age.prediction} years`
+                      : demographics.age || 'Unknown'
                   }
                 </span>
               </div>
@@ -120,10 +125,20 @@ const PersonAnalysis: React.FC<PersonAnalysisProps> = ({ person }) => {
               <div className="flex justify-between">
                 <span className="text-gray-600">Gender:</span>
                 <span className="font-medium capitalize">
-                  {demographics.gender.prediction}
-                  <span className="text-xs text-gray-500 ml-1">
-                    ({demographics.gender.confidence})
-                  </span>
+                  {typeof demographics.gender === 'object' && demographics.gender?.prediction
+                    ? demographics.gender.prediction
+                    : typeof demographics.gender === 'string' 
+                      ? demographics.gender 
+                      : 'Unknown'
+                  }
+                  {typeof demographics.gender === 'object' && demographics.gender?.confidence && (
+                    <span className="text-xs text-gray-500 ml-1">
+                      ({typeof demographics.gender.confidence === 'number' 
+                        ? `${(demographics.gender.confidence * 100).toFixed(0)}%`
+                        : demographics.gender.confidence
+                      })
+                    </span>
+                  )}
                 </span>
               </div>
             )}
