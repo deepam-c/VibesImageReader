@@ -1,44 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Azure Static Web Apps configuration
+  // Azure Static Web Apps - minimal configuration
   output: 'export',
   trailingSlash: true,
-  skipTrailingSlashRedirect: true,
   distDir: 'out',
   images: {
     unoptimized: true
   },
   
-  // Optimize for production builds
-  compress: true,
+  // Minimal optimizations to prevent build issues
+  swcMinify: false, // Disable SWC minifier that might cause memory issues
   
-  // Reduce memory usage during build
-  experimental: {
-    workerThreads: false,
-    cpus: 1
-  },
+  // Disable experimental features that might cause problems
+  experimental: {},
   
-  // Disable source maps in production to reduce build size
-  productionBrowserSourceMaps: false,
-  
-  // Optimize bundle analyzer
-  webpack: (config, { isServer }) => {
-    // Reduce memory usage
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        maxSize: 244000, // Limit chunk size to prevent memory issues
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-          },
-        },
-      },
-    }
-    
+  // Simple webpack config
+  webpack: (config) => {
+    // Minimal webpack modifications
+    config.optimization.minimize = false // Disable minification during build
     return config
   },
 }
