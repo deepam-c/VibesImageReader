@@ -106,13 +106,30 @@ export default function ViewDataPage() {
   const formatJSON = (data: any) => {
     // Convert any objects that might have non-serializable values
     const cleanData = JSON.parse(JSON.stringify(data, (key, value) => {
-      // Convert any objects with prediction/confidence to strings
-      if (typeof value === 'object' && value !== null && 'prediction' in value && 'confidence' in value) {
-        return `${value.prediction} (${(value.confidence * 100).toFixed(1)}%)`
-      }
-      // Convert Firestore timestamps to readable strings
-      if (value && typeof value === 'object' && value.toDate) {
-        return value.toDate().toISOString()
+      // Convert any objects with prediction/confidence to strings for display
+      if (typeof value === 'object' && value !== null) {
+        // Handle gender/demographic objects
+        if ('prediction' in value && 'confidence' in value) {
+          const confidenceStr = typeof value.confidence === 'number' 
+            ? `${(value.confidence * 100).toFixed(1)}%` 
+            : value.confidence
+          return `${value.prediction} (${confidenceStr})`
+        }
+        // Handle age objects
+        if ('estimated_age' in value && 'age_range' in value) {
+          return `${value.estimated_age} years (${value.age_range?.replace('_', ' ') || 'unknown range'})`
+        }
+        // Handle emotion objects
+        if ('primary' in value && 'confidence' in value && typeof value.primary === 'string') {
+          const confidenceStr = typeof value.confidence === 'number' 
+            ? `${(value.confidence * 100).toFixed(1)}%` 
+            : value.confidence
+          return `${value.primary} (${confidenceStr})`
+        }
+        // Convert Firestore timestamps to readable strings
+        if (value.toDate && typeof value.toDate === 'function') {
+          return value.toDate().toISOString()
+        }
       }
       return value
     }))
@@ -431,17 +448,45 @@ export default function ViewDataPage() {
                                 <div className="flex justify-between">
                                   <span className="text-gray-600">Age:</span>
                                   <span className="font-medium">
-                                    {person.demographics?.estimatedAge || 'Unknown'} 
-                                    {person.demographics?.ageRange ? ` (${person.demographics.ageRange})` : ''}
+                                    {typeof person.demographics?.estimatedAge === 'object' && (person.demographics.estimatedAge as any)?.prediction 
+                                      ? `${(person.demographics.estimatedAge as any).prediction} years` 
+                                      : person.demographics?.estimatedAge || 'Unknown'
+                                    } 
+                                    {person.demographics?.ageRange && typeof person.demographics.ageRange === 'string' 
+                                      ? ` (${person.demographics.ageRange})` 
+                                      : person.demographics?.ageRange && typeof person.demographics.ageRange === 'object' && (person.demographics.ageRange as any)?.prediction
+                                        ? ` (${(person.demographics.ageRange as any).prediction})`
+                                        : ''
+                                    }
                                   </span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-gray-600">Gender:</span>
-                                  <span className="font-medium capitalize">{person.demographics?.gender || 'Unknown'}</span>
+                                  <span className="font-medium capitalize">
+                                    {typeof person.demographics?.gender === 'object' && (person.demographics.gender as any)?.prediction
+                                      ? (person.demographics.gender as any).prediction
+                                      : typeof person.demographics?.gender === 'string' 
+                                        ? person.demographics.gender 
+                                        : 'Unknown'
+                                    }
+                                    {typeof person.demographics?.gender === 'object' && (person.demographics.gender as any)?.confidence && (
+                                      <span className="text-xs text-gray-500 ml-1">
+                                        ({typeof (person.demographics.gender as any).confidence === 'number' 
+                                          ? `${((person.demographics.gender as any).confidence * 100).toFixed(0)}%`
+                                          : (person.demographics.gender as any).confidence
+                                        })
+                                      </span>
+                                    )}
+                                  </span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-gray-600">Emotion:</span>
-                                  <span className="font-medium capitalize">{person.emotions?.primary || 'Unknown'}</span>
+                                  <span className="font-medium">
+                                    {typeof person.emotions?.primary === 'object' && (person.emotions.primary as any)?.prediction
+                                      ? (person.emotions.primary as any).prediction
+                                      : person.emotions?.primary || 'Unknown'
+                                    }
+                                  </span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-gray-600">Style:</span>
