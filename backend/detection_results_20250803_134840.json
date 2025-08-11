@@ -1,0 +1,107 @@
+{
+  "image_path": "image3.jpg",
+  "timestamp": "20250803_134840",
+  "local_results": {
+    "image_size": {
+      "width": 1280,
+      "height": 722
+    },
+    "production_params": {
+      "faces_detected": 3,
+      "faces": [
+        [
+          1045,
+          223,
+          73,
+          73
+        ],
+        [
+          887,
+          396,
+          89,
+          89
+        ],
+        [
+          364,
+          223,
+          123,
+          123
+        ]
+      ]
+    },
+    "aggressive_params": {
+      "faces_detected": 9,
+      "faces": [
+        [
+          1042,
+          222,
+          75,
+          75
+        ],
+        [
+          783,
+          352,
+          58,
+          58
+        ],
+        [
+          799,
+          235,
+          84,
+          84
+        ],
+        [
+          361,
+          224,
+          123,
+          123
+        ],
+        [
+          827,
+          323,
+          82,
+          82
+        ],
+        [
+          890,
+          398,
+          85,
+          85
+        ],
+        [
+          104,
+          350,
+          98,
+          98
+        ],
+        [
+          900,
+          176,
+          52,
+          52
+        ],
+        [
+          704,
+          206,
+          90,
+          90
+        ]
+      ]
+    },
+    "conservative_params": {
+      "faces_detected": 1,
+      "faces": [
+        [
+          366,
+          225,
+          120,
+          120
+        ]
+      ]
+    }
+  },
+  "production_results": {
+    "status": "error",
+    "error": "HTTPSConnectionPool(host='vibes-backend-prod.grayisland-c8acfaf2.ukwest.azurecontainerapps.io', port=443): Max retries exceeded with url: /analyze-image (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1028)')))"
+  }
+}

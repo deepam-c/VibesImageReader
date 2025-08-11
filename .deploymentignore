@@ -1,0 +1,33 @@
+# Frontend files to ignore
+node_modules/
+package.json
+package-lock.json
+next.config.js
+tailwind.config.js
+postcss.config.js
+tsconfig.json
+.next/
+out/
+build/
+.env.local
+.gitignore
+
+# Frontend source
+app/
+components/
+lib/
+
+# Development files
+.vscode/
+.git/
+*.md
+*.msi
+
+# Deployment scripts
+deploy-*.ps1
+deploy-*.sh
+create-deployment-zip.ps1
+
+# Only deploy backend folder contents
+# The ! prefix means "don't ignore these"
+!backend/ 
