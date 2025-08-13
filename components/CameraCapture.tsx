@@ -15,6 +15,37 @@ export default function CameraCapture({ onImageCapture }: CameraCaptureProps) {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [error, setError] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const progressTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const startProgress = useCallback(() => {
+    // Reset
+    setProgress(0)
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current)
+
+    // Simulate streaming progress while backend processes
+    progressTimerRef.current = setInterval(() => {
+      setProgress(prev => {
+        // Accelerate early, slow near the end; cap at 92% until completion
+        const next = prev < 60 ? prev + 5 : prev < 85 ? prev + 3 : prev + 1
+        return Math.min(next, 92)
+      })
+    }, 200)
+  }, [])
+
+  const finishProgress = useCallback(() => {
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current)
+    setProgress(100)
+    // Smoothly hide after brief completion flash
+    setTimeout(() => setProgress(0), 400)
+  }, [])
+
+  const failProgress = useCallback(() => {
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current)
+    // Show partial completion then reset
+    setProgress(p => (p < 30 ? 30 : p))
+    setTimeout(() => setProgress(0), 400)
+  }, [])
 
   const startCamera = useCallback(async () => {
     try {
@@ -77,6 +108,7 @@ export default function CameraCapture({ onImageCapture }: CameraCaptureProps) {
     // Send to computer vision backend for analysis
     try {
       setIsLoading(true)
+      startProgress()
       const analysisResults = await analyzeImageWithCV(imageDataUrl)
       console.log('CV Analysis Results:', analysisResults)
       
@@ -86,6 +118,7 @@ export default function CameraCapture({ onImageCapture }: CameraCaptureProps) {
       if (onImageCapture) {
         onImageCapture(imageDataUrl, analysisResults)
       }
+      finishProgress()
     } catch (error) {
       console.error('Error analyzing image:', error)
       setError('Failed to analyze image. Please try again.')
@@ -93,6 +126,7 @@ export default function CameraCapture({ onImageCapture }: CameraCaptureProps) {
       if (onImageCapture) {
         onImageCapture(imageDataUrl)
       }
+      failProgress()
     } finally {
       setIsLoading(false)
     }
@@ -240,6 +274,7 @@ export default function CameraCapture({ onImageCapture }: CameraCaptureProps) {
     try {
       setIsLoading(true)
       setError('')
+      startProgress()
 
       const reader = new FileReader()
       reader.onload = async (e) => {
@@ -258,6 +293,7 @@ export default function CameraCapture({ onImageCapture }: CameraCaptureProps) {
                  if (onImageCapture) {
                    onImageCapture(imageDataUrl, analysisResults)
                  }
+                 finishProgress()
                } catch (error) {
                  console.error('Error analyzing uploaded image:', error)
                  setError('Failed to analyze image. Please try again.')
@@ -265,6 +301,7 @@ export default function CameraCapture({ onImageCapture }: CameraCaptureProps) {
                  if (onImageCapture) {
                    onImageCapture(imageDataUrl)
                  }
+                 failProgress()
                } finally {
                  setIsLoading(false)
                }
@@ -273,6 +310,7 @@ export default function CameraCapture({ onImageCapture }: CameraCaptureProps) {
       reader.onerror = () => {
         setError('Failed to read the image file. Please try again.')
         setIsLoading(false)
+        failProgress()
       }
 
       reader.readAsDataURL(file)
@@ -294,6 +332,18 @@ export default function CameraCapture({ onImageCapture }: CameraCaptureProps) {
 
   return (
     <div className="space-y-6">
+      {progress > 0 && (
+        <div className="space-y-2">
+          <div className="text-xs text-gray-500 font-medium">Analyzing with AI...</div>
+          <div className="corporate-progress ai-progress">
+            <div
+              className="corporate-progress-bar ai-progress-bar"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Error Message */}
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">

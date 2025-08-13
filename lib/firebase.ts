@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, addDoc, getDocs, orderBy, query, Timestamp, onSnapshot, Unsubscribe, limit } from 'firebase/firestore'
+import { getFirestore, collection, addDoc, getDocs, orderBy, query, Timestamp, onSnapshot, Unsubscribe } from 'firebase/firestore'
 
 // WebSocket connection management with local Socket.IO implementation
 let io: any = null;
@@ -513,11 +513,10 @@ export async function getDashboardDataFromFirebase(): Promise<DashboardData> {
   try {
     console.log('📊 [MANUAL CALL] Fetching dashboard data directly from Firebase...')
     
-    // Get recent analyses directly from Firebase with same limit as real-time listener
+    // Get recent analyses directly from Firebase (no limit)
     const q = query(
       collection(db, 'cvAnalyses'), 
-      orderBy('timestamp', 'desc'),
-      limit(100) // Same limit as real-time listener
+      orderBy('timestamp', 'desc')
     )
     const querySnapshot = await getDocs(q)
     
@@ -529,7 +528,7 @@ export async function getDashboardDataFromFirebase(): Promise<DashboardData> {
       } as CVAnalysisData)
     })
     
-    console.log(`✅ [MANUAL CALL] Got ${analyses.length} analyses from Firebase (limited to 100)`)
+    console.log(`✅ [MANUAL CALL] Got ${analyses.length} analyses from Firebase`)
     
     // Calculate stats directly from Firebase data
     const stats = calculateDashboardStats(analyses)
@@ -703,8 +702,7 @@ export function setupFirebaseDashboardListener(
   const unsubscribe = onSnapshot(
     query(
       collection(db, 'cvAnalyses'),
-      orderBy('timestamp', 'desc'),
-      limit(100) // Increased to match manual refresh data amount
+      orderBy('timestamp', 'desc')
     ),
     (snapshot) => {
       console.log('🔥 [REAL-TIME] Firebase snapshot update received!')

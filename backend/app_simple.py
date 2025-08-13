@@ -128,7 +128,8 @@ def analyze_image_basic(image: np.ndarray) -> dict:
     dominant_colors = get_dominant_colors(image)
     
     # Improved person detection using multiple methods
-    person_detected, face_detected = detect_person_and_face(image)
+    person_detected, face_detected, face_regions = detect_person_and_face(image)
+    people_count = len(face_regions) if face_regions else (1 if person_detected else 0)
     
     # Calculate edge percentage for additional analysis
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -149,9 +150,9 @@ def analyze_image_basic(image: np.ndarray) -> dict:
             'analysis_version': '1.0.0-simplified'
         },
                  'detection_summary': {
-             'total_people_detected': 1 if person_detected else 0,
-             'faces_detected': 1 if face_detected else 0,
-             'poses_detected': 1 if person_detected else 0,  # Assume pose if person detected
+             'total_people_detected': int(people_count),
+             'faces_detected': len(face_regions) if face_regions else 0,
+             'poses_detected': int(people_count),  # Assume pose if person detected
              'gender_distribution': {'unknown': 1 if person_detected else 0},
              'age_distribution': {'unknown': 1 if person_detected else 0},
             'confidence_scores': {

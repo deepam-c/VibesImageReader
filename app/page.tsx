@@ -151,7 +151,7 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Welcome to CV Analytics Pro
+                Welcome to AI Eye
               </h1>
               <p className="text-gray-600 text-lg">
                 Advanced computer vision analysis for clothing, accessories, and personal attributes
