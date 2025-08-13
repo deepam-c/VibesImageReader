@@ -23,7 +23,7 @@ export default function CorporateHeader() {
       <nav className="corporate-nav">
         <div className="corporate-logo">
           AI Eye
-          <div className="mt-0.5 text-sm text-white/80 font-medium tracking-wide antialiased leading-snug">More you teach, smarter I become</div>
+          <div className="mt-0.5 text-sm text-white/80 font-medium tracking-wide antialiased leading-snug">More you show, smarter I become</div>
         </div>
         
         <div className="corporate-nav-items">
