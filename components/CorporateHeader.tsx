@@ -22,7 +22,7 @@ export default function CorporateHeader() {
     <header className="corporate-header">
       <nav className="corporate-nav">
         <div className="corporate-logo">
-          CV Analytics Pro
+          AI Eye
         </div>
         
         <div className="corporate-nav-items">

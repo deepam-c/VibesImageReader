@@ -13,6 +13,16 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ results, isVisible = 
   }
 
   const { detection_summary, people = [], scene_analysis } = results
+  const derivedPeopleLen = Array.isArray(people) ? people.length : 0
+  const dsTotal = detection_summary?.total_people_detected
+  const dsPeople = detection_summary?.people_detected
+  const dsFaces = detection_summary?.faces_detected
+  const peopleCount = Math.max(
+    typeof dsTotal === 'number' ? dsTotal : 0,
+    typeof dsPeople === 'number' ? dsPeople : 0,
+    typeof dsFaces === 'number' ? dsFaces : 0,
+    derivedPeopleLen
+  )
 
   return (
     <div className="mt-6 bg-white rounded-lg shadow-lg p-6">
@@ -26,7 +36,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ results, isVisible = 
       {/* Detection Summary */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-blue-600">{detection_summary?.total_people_detected || 0}</div>
+          <div className="text-2xl font-bold text-blue-600">{peopleCount}</div>
           <div className="text-sm text-gray-600">People Detected</div>
         </div>
         <div className="bg-green-50 p-4 rounded-lg">

@@ -1,12 +1,8 @@
 /** @type {import('next').NextConfig} */
+const isProd = process.env.NODE_ENV === 'production'
 const nextConfig = {
-  // Azure Static Web Apps - minimal configuration
-  output: 'export',
-  trailingSlash: true,
-  distDir: 'out',
-  images: {
-    unoptimized: true
-  },
+  // Azure Static Web Apps - only in production builds
+  ...(isProd ? { output: 'export', distDir: 'out', trailingSlash: true, images: { unoptimized: true } } : {}),
   
   // Minimal optimizations to prevent build issues
   swcMinify: false, // Disable SWC minifier that might cause memory issues

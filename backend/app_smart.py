@@ -128,6 +128,7 @@ def analyze_image_smart(image: np.ndarray) -> dict:
     
     # Smart person and face detection
     person_detected, face_detected, face_regions = detect_person_and_face_smart(image)
+    people_count = len(face_regions) if face_regions else (1 if person_detected else 0)
     
     # Initialize results structure
     results = {
@@ -143,9 +144,9 @@ def analyze_image_smart(image: np.ndarray) -> dict:
             'analysis_version': '3.0.0-smart'
         },
         'detection_summary': {
-            'total_people_detected': 1 if person_detected else 0,
+            'total_people_detected': int(people_count),
             'faces_detected': len(face_regions) if face_regions else 0,
-            'poses_detected': 1 if person_detected else 0,
+            'poses_detected': int(people_count),
             'gender_distribution': {'unknown': 0, 'male': 0, 'female': 0},
             'age_distribution': {'child': 0, 'teenager': 0, 'young_adult': 0, 'adult': 0, 'middle_aged': 0, 'senior': 0},
             'confidence_scores': {
@@ -156,7 +157,7 @@ def analyze_image_smart(image: np.ndarray) -> dict:
         },
         'people': [],
         'scene_analysis': {
-            'scene_type': 'portrait' if person_detected else 'no_people',
+            'scene_type': ('no_people' if people_count == 0 else 'portrait' if people_count == 1 else 'small_group' if people_count <= 3 else 'large_group'),
             'lighting_conditions': assess_lighting_smart(image),
             'image_quality': assess_image_quality(width, height),
             'analysis_challenges': []
